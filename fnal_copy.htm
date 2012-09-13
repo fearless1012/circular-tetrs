@@ -5,7 +5,7 @@
       	background-color:#9C9898;
       	}
       	#myCanvas {
-        border: 1px solid #9C9898;
+        border: 2px solid #9C9898;
 	background-color:#000000;
       	}
 </style>	
@@ -23,9 +23,8 @@
 	var score;
 	var shape,next_shape;
 	var id,next_id;
-	var maze_rotate;
 	var prev_rot_cnt=3;
-	
+	var size;
 	window.onload =function()
 	{
 		canvas = document.getElementById('myCanvas');
@@ -34,24 +33,19 @@
 		changesize();
 		
 		init();
-		context.font="40pt Calibri";
-                context.fillStyle="red";
-                context.fillText("CiRcUlAr TeTrIs",300,50);
-                context.font="20pt Calibri";
-                context.fillStyle="red";
-                context.fillText("Next Shape",550,100);
+               
 		changeshape();
+		
 		setInterval(maze,200);
 	};
 	function changesize()
 	{
-		var size;
 		if(window.innerHeight<window.innerWidth)
 		size=window.innerHeight;
 		else
 		size=window.innerWidth;
-		canvas.height=size-1;
-		canvas.width=size-1;
+		canvas.height=size;
+		canvas.width=size;
 	};	
 	function init()
 	{
@@ -80,7 +74,7 @@
 		cell_id = new Array(18);
 		
 		for(i=0;i<cell_id.length;i++)
-		cell_id[i]=new Array(20);
+		cell_id[i]=new Array(18);
 
 		for(i=0;i<cell_id.length;i++)
 		for(j=0;j<cell_id[0].length;j++)
@@ -91,7 +85,6 @@
 		else
 		cell_id[i][j]=0;
 		
-		maze_rotate = false;
 		next_id = (Math.floor(Math.random()*shape.length));	
 		score = 0;	
 		rot_cnt = 0;	
@@ -101,6 +94,8 @@
 	
 	function maze()
 	{
+		draw_next_shape();
+		display_score();
 		brick_fall();	
 	};
 	
@@ -113,7 +108,7 @@
 			if(cell_id[i][j]==2||cell_id[i][j]==4||cell_id[i][j]==5)
 			ignore();
 			else if(cell_id[i][j]==0)
-			deactivate(i,j);	
+			deactivate(j);	
 			else
 			activate();
 			draw_cell(i,j);
@@ -124,22 +119,21 @@
 	{
 		context.fillStyle ="black";
 	};
-	function deactivate(i,j)
+	function deactivate(j)
 	{
-		context.fillStyle='rgb( ' + Math.floor(i*255/cell_id.length) + ','+ Math.floor(j*255/cell_id[0].length) +', 0  )';
+		context.fillStyle='rgb( 0,0,'+ Math.floor(j*250/cell_id[0].length) +' )';
 	};
 	function activate()
 	{
-		context.fillStyle ="grey";
+		context.fillStyle = 'grey';
 	};
 
 	function draw_cell(i,j)
 	{
 		var xc=canvas.width/2,yc=canvas.height/2;
-		if(canvas.width<canvas.height)
-        	var tr=canvas.width/40; 
-        	else
-        	var tr=canvas.height/40; 	
+		
+        	var tr=size/40; 
+        	
 		context.beginPath();
         		context.arc(xc,yc,j*tr,i*ta+dta,i*ta+ta+dta,false);
 			context.arc(xc,yc,j*tr+tr,i*ta+ta+dta,i*ta+dta,true);
@@ -158,7 +152,6 @@
 		randomize_brick_position();
 		makeshape();
 		make_next_shape();
-		draw_next_shape();
 	}
 
 	function randomize_brick_id()
@@ -447,6 +440,8 @@
 
 	function keypress(event)
 	{
+		var maze_rotate = false;
+		
 		if(event.keyCode==37)
 		{
 			maze_rotate = check_collision_anti_clockwise();
@@ -468,7 +463,6 @@
 			rotate_brick_anticlockwise();
 		}			
 		draw_maze();
-		maze_rotate = false;
 	};
 	
 	function check_collision_anti_clockwise()
@@ -650,13 +644,19 @@
 	function draw_box(i,j)
 	{
 		context.beginPath();
-        	context.rect(2*canvas.width/5+(i*20), 50+(j*20), 20, 20);
+        	context.rect(size/16+(i*size/50), size/15+(j*size/50),size/50 , size/50);
         	context.closePath();
         	context.fill();
-        	context.lineWidth = 1.5;
-        	context.strokeStyle = '000000';
-        	context.stroke();
+        	context.font="100% Calibri";
+                context.fillStyle="red";
+                context.fillText("Next Shape",size/15,size/17);
       	};
+      	function display_score()
+      	{
+      		context.fillText("Score",12*size/15,size/17);
+                activate();
+                context.fillText(score,12*size/15,size/10);
+        }
 
 	
 		
