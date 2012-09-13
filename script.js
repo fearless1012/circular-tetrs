@@ -1,4 +1,4 @@
-//(function(){
+(function(){
 window.addEventListener('keydown',keypress,false); 
 window.onresize= changesize;
 var cell_id;
@@ -11,8 +11,10 @@ var rot_cnt;
 var score;
 var shape,next_shape;
 var id,next_id;
-var prev_rot_cnt=3;
+var prev_rot_cnt;
 var size;
+var init_speed;
+var speed;
 window.onload =function()
 {
     canvas = document.getElementById('myCanvas');
@@ -24,7 +26,7 @@ window.onload =function()
     
     changeshape();
     
-    setInterval(maze,200);
+    setInterval(maze,speed);
 };
 function changesize()
 {
@@ -78,6 +80,9 @@ function init()
     rot_cnt = 0;	
     dta = 0;
     ta = 6.28/cell_id.length;
+    prev_rot_cnt=3;
+    init_speed=700;
+    speed=init_speed;
 };
 
 function maze()
@@ -296,7 +301,6 @@ function makeshape_rev360()
 
 function brick_fall()
 {
-    
     var i,j;
     y_brick-=1;
     
@@ -328,7 +332,7 @@ function brick_fall()
 	    }
 	}
     }
-
+    speed=Math.floor(Math.sqrt((6000*y_brick)-(init_speed*init_speed)));
     draw_maze();
 };	
 
@@ -374,6 +378,8 @@ function stop_brick()
     }
     check_rowfull();
     check_gameover()
+  
+    speed=init_speed;
     changeshape();
 };
 
@@ -647,4 +653,4 @@ function display_score()
 
 
 
-//}());		
+}());		
