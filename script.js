@@ -1,6 +1,11 @@
-(function(){
+//(function(){
 window.addEventListener('keydown',keypress,false); 
-window.onresize= changesize;
+window.onload = game_load;
+window.onresize=function()
+{
+	changesize();
+	draw_maze();
+}
 var cell_id;
 var ta;     
 var dta;                                                        
@@ -15,7 +20,11 @@ var prev_rot_cnt;
 var size;
 var init_speed;
 var speed;
-window.onload =function()
+var level;
+var pause;
+var game_over;
+
+function game_load()
 {
     canvas = document.getElementById('myCanvas');
     context = canvas.getContext('2d');
@@ -25,7 +34,11 @@ window.onload =function()
     init();
     
     changeshape();
-    
+    set_level();
+};
+function set_level()
+{
+    speed=init_speed+(level*15);
     setInterval(maze,speed);
 };
 function changesize()
@@ -34,6 +47,9 @@ function changesize()
 	size=window.innerHeight;
     else
 	size=window.innerWidth;
+
+    size-=(2*size/100);
+
     canvas.height=size;
     canvas.width=size;
 };	
@@ -81,14 +97,17 @@ function init()
     dta = 0;
     ta = 6.28/cell_id.length;
     prev_rot_cnt=3;
-    init_speed=700;
-    speed=init_speed;
+    init_speed=800;
+    level=0;
+    pause=0;
+    game_over=0;
 };
 
 function maze()
 {
     draw_next_shape();
     display_score();
+    if(!pause&&!game_over)
     brick_fall();	
 };
 
@@ -106,6 +125,32 @@ function draw_maze()
 	    activate();
 	draw_cell(i,j);
     }
+    if(pause)
+    {
+    	draw_flag();
+   	context.font="100% Calibri";
+    	context.fillStyle="red";
+    	context.fillText("GAME PAUSED",5*size/13,size/2);
+    }
+    if(game_over)
+    {
+    	draw_flag();
+    	context.font="100% Calibri";
+    	context.fillStyle="red";
+    	context.fillText("GAME OVER",5*size/13,7*size/16);
+    	context.fillText("SCORE : "+ score ,5*size/13,8*size/16);
+    	context.font="100% Calibri";
+    	context.fillText("Press 'r' to restart"+ score ,4*size/13,9*size/16);
+    }	 
+};
+
+function draw_flag()
+{   
+    context.fillStyle="pink";
+    context.beginPath();
+    context.rect(4*size/13, 5*size/13,5*size/13 , 3*size/13);
+    context.closePath();
+    context.fill();
 };
 
 function ignore()
@@ -187,6 +232,7 @@ function makeshape_rev90()
 	{
 	    temp_x=(x_brick+k)%cell_id.length;
 	    temp_y=y_brick-j;
+	     console.log(temp_x+" "+temp_y);
 	    if(cell_id[temp_x][temp_y]==4)
 	    {
 		cell_id[temp_x][temp_y]+=shape[id][i][j];
@@ -219,6 +265,7 @@ function makeshape_rev180()
 	{
 	    temp_x=(x_brick+k)%cell_id.length;
 	    temp_y=y_brick-l;
+	      console.log(temp_x+" "+temp_y);
 	    if(cell_id[temp_x][temp_y]==4)
 	    {
 		cell_id[temp_x][temp_y]+=shape[id][j][i];
@@ -250,8 +297,10 @@ function makeshape_rev270()
 	l=0;
 	for(j=shape[id][0].length-1;j>=0;j--)
 	{
-	    temp_x=(x_brick+k)%cell_id.length;
+	    if(y_brick-shape[id][0].length+1>=3)
+	    {temp_x=(x_brick+k)%cell_id.length;
 	    temp_y=y_brick-l;
+	       console.log(temp_x+" "+temp_y);
 	    if(cell_id[temp_x][temp_y]==4)
 	    {
 		cell_id[temp_x][temp_y]+=shape[id][i][j];
@@ -266,7 +315,7 @@ function makeshape_rev270()
 		rotate_brick_clockwise();
 		break;
 	    }
-	    l++;
+	    l++;}
 	}
 	k--;
     }
@@ -282,6 +331,7 @@ function makeshape_rev360()
     {
 	temp_x=(x_brick+i)%cell_id.length;
 	temp_y=y_brick+j;
+	   console.log(temp_x+" "+temp_y);
 	if(cell_id[temp_x][temp_y]==4)
 	{
 	    cell_id[temp_x][temp_y]+=shape[id][j][i];
@@ -332,7 +382,7 @@ function brick_fall()
 	    }
 	}
     }
-    speed=Math.floor(Math.sqrt((6000*y_brick)-(init_speed*init_speed)));
+   
     draw_maze();
 };	
 
@@ -356,7 +406,7 @@ function check_stop()
 	{
 	    for(i=0;i<cell_id.length;i++)
 	    {
-		if(cell_id[i][j]+cell_id[i][j+1]==4)
+		if(cell_id[i][j]==3&&cell_id[i][j+1]==1)
 		{
 		    stop_brick();
 		    break;
@@ -378,8 +428,6 @@ function stop_brick()
     }
     check_rowfull();
     check_gameover()
-  
-    speed=init_speed;
     changeshape();
 };
 
@@ -410,10 +458,11 @@ function check_gameover()
     var n3=0;
     for(i=0;i<cell_id.length;i++)
 	if(cell_id[i][cell_id.length-2]==3)
-    {
-	alert("Gameover \n Score = "+score);
-	init();
-    }
+  	{
+    		game_over=1;
+    		score+=5*level;
+    	}
+    	
 };
 
 function clear_row(a)
@@ -428,14 +477,34 @@ function clear_row(a)
 	    cell_id[i][j]=cell_id[i][j+1];
     }
     score++;
+    if(score==5)
+    level_up();
 };
 
+function level_up()
+{
+	ignore();
+    	context.fillText(level,12*size/15,size/10);
+    	score=0;
+	level++;
+	set_level();
+};
 
 function keypress(event)
 {
     var maze_rotate = false;
-    
-    if(event.keyCode==37)
+    if(event.keyCode==27)
+    {
+    	if(!pause)
+    	pause_game();
+    	else
+    	unpause_game();
+    }
+    if(pause)
+    {
+    	//do_nothing
+    }
+    else if(event.keyCode==37)
     {
 	maze_rotate = check_collision_anti_clockwise();
 	if(maze_rotate)
@@ -454,7 +523,19 @@ function keypress(event)
     else if(event.keyCode==40)
     {
 	rotate_brick_anticlockwise();
-    }			
+    }		
+    else if(event.keyCode==32)
+    {
+    	brick_fall();
+    }
+    else if(event.keyCode==82)
+    {
+    	if(game_over)
+    	{
+    		clearInterval();
+    		game_load();    		
+    	}
+    }
     draw_maze();
 };
 
@@ -554,17 +635,22 @@ function brick_rev_clockwise()
     x_brick-=1;
 };
 
-function rotate_brick_clockwise()
+function remove_previous()
 {
-    var i,j,temp_x;
+	 var i,j;
     for(i=0;i<cell_id.length;i++)
 	for(j=0;j<cell_id[0].length;j++)
     {
-	if(cell_id[i][j]==1)
-	    cell_id[i][j]=0;
-	if(cell_id[i][j]==5)
-	    cell_id[i][j]=4;
+	
+	if(cell_id[i][j]==1||cell_id[i][j]==5)
+	    cell_id[i][j]-=1;
     }	
+};
+
+function rotate_brick_clockwise()
+{
+   
+   remove_previous();
     if(rot_cnt==0)
 	makeshape_rev90();
     else if(rot_cnt==1)
@@ -581,15 +667,7 @@ function rotate_brick_clockwise()
 
 function rotate_brick_anticlockwise()
 {
-    var i,j,temp_x;
-    for(i=0;i<cell_id.length;i++)
-	for(j=0;j<cell_id[0].length;j++)
-    {
-	if(cell_id[i][j]==1)
-	    cell_id[i][j]=0;
-	if(cell_id[i][j]==5)
-	    cell_id[i][j]=4;
-    }	
+   remove_previous();
     if(rot_cnt==0)
 	makeshape_rev270();
     else if(rot_cnt==1)
@@ -646,11 +724,20 @@ function draw_box(i,j)
 };
 function display_score()
 {
-    context.fillText("Score",12*size/15,size/17);
+    context.fillText("Level",12*size/15,size/17);
     activate();
-    context.fillText(score,12*size/15,size/10);
+    context.fillText(level,12*size/15,size/10);
 }
 
+function pause_game()
+{
+	pause=1;
+};
+
+function unpause_game()
+{
+	pause=0;
+};
 
 
-}());		
+//}());		
